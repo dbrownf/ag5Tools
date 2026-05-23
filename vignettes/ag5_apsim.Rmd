@@ -216,8 +216,65 @@ ag5_apsim(
 )
 ```
 
+## Integration with the apsimx R package
+
+The [`apsimx`](https://cran.r-project.org/package=apsimx) package (Miguez, 2022) lets you
+run and edit APSIM Next Generation simulations entirely from R. Its built-in examples —
+including a ready-to-run Wheat simulation — are documented in the
+[apsimx vignette](https://cran.r-project.org/web/packages/apsimx/vignettes/apsimx.html).
+
+The example below shows only the ag5Tools step: generating a `.met` file for the Wheat
+example site (**Dalby, Queensland, Australia**, lon = 151.26, lat = −27.18, the classic
+APSIM benchmark location) and then replacing the weather file in the simulation using
+`edit_apsimx()`. Everything else — soil, management, crop parameters — remains exactly
+as documented in the apsimx vignette.
+
+### Step 1: generate the met file with ag5Tools
+
+```{r eval = FALSE}
+library(ag5Tools)
+
+ag5_apsim(
+  coords     = c(151.26, -27.18),    # Dalby, QLD
+  start_date = "1990-01-01",
+  end_date   = "2020-12-31",
+  path       = "C:/agera5_data",
+  filename   = "C:/apsim/dalby_agera5",
+  format     = "classic"
+)
+# writes: C:/apsim/dalby_agera5.met
+```
+
+### Step 2: swap the weather file in the apsimx Wheat example
+
+```{r eval = FALSE}
+library(apsimx)
+
+# Locate the built-in Wheat example that ships with apsimx
+ex.dir <- system.file("extdata", package = "apsimx")
+
+# Replace the weather node with the AgERA5 met file and write to a working directory
+edit_apsimx(
+  "Wheat.apsimx",
+  src.dir = ex.dir,
+  wrt.dir = "C:/apsim",
+  node    = "Weather",
+  value   = "C:/apsim/dalby_agera5.met"
+)
+```
+
+The edited `Wheat.apsimx` in `C:/apsim` now uses AgERA5 climate data. Run it and retrieve
+results with `apsimx()` as shown in the
+[apsimx documentation](https://cran.r-project.org/web/packages/apsimx/vignettes/apsimx.html).
+
+```{r eval = FALSE}
+sim <- apsimx("Wheat.apsimx", src.dir = "C:/apsim", value = "report")
+head(sim)
+```
+
 ## See also
 
 - `vignette("extracing_data")` — extracting individual variables with `ag5_extract()`
 - `vignette("ag5Tools")` — downloading AgERA5 data with `ag5_download()`
 - `vignette("ag5_workflow")` — complete end-to-end workflow
+- [apsimx package on CRAN](https://cran.r-project.org/package=apsimx) — run and edit APSIM Next Generation from R
