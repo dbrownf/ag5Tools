@@ -52,7 +52,8 @@ or the column name in the case of \code{data.frame}}
 
 \item{time}{Only for variable Relative-Humidity-2m, see details for valid options}
 
-\item{celsius}{logical Only for variables "Temperature-Air-2m" and "2m_dewpoint_temperature".}
+\item{celsius}{logical Only for variables "Temperature-Air-2m" and "2m_dewpoint_temperature".
+If \code{TRUE} the values are converted from Kelvin to Celsius. Default is \code{FALSE}.}
 
 \item{parallel}{logical Use parallel computation to speed-up data processing}
 
@@ -64,12 +65,11 @@ or the column name in the case of \code{data.frame}}
 
 \item{end_date}{\code{character} Column name of end_date values in the case that coords is a \code{data.frame}}
 
-\item{ncores}{Number of cores to use with parallel. If NULL and parallel is ON, half the available cores will be used.
-If \code{TRUE} the values are converted from Kelvin to Celsius. Default is \code{FALSE}}
+\item{ncores}{Number of cores to use with parallel. If NULL and parallel is ON, half the available cores will be used.}
 }
 \value{
 \code{numeric} vector with length equal to the number of dates between first and
-second date. The returned vecter is a named vector, with requested dates as names.
+second date. The returned vector is a named vector, with requested dates as names.
 If only one date is provided the function returns a \code{numeric} vector
 with \code{length = 1}.
 If \code{coords} is a \code{data.frame}, the function returns a \code{list} of
@@ -82,6 +82,32 @@ and dates. If dates is one value it extracts a single observation for the specif
 If dates is a character vector of \code{length == 2}, it will extract a time series of the specified variable
 and location, where the first dates value is the start date and the second the end date.
 }
+\section{Note on variable and statistic naming}{
+This function uses the \strong{file names written to disk by the CDS} to locate
+AgERA5 files (e.g. \code{"Temperature-Air-2m"}, \code{"Max-24h"}, \code{"06h"}).
+These differ from the CDS API names used in \code{\link{ag5_download}}
+(e.g. \code{"2m_temperature"}, \code{"24_hour_maximum"}, \code{"06_00"}).
+The two systems reflect the upstream API and file formats respectively.
+\subsection{Variable name mapping (file / extract → CDS API / download)}{
+
+\tabular{ll}{
+\strong{ag5_extract} \tab \strong{ag5_download} \cr
+Temperature-Air-2m \tab 2m_temperature \cr
+Precipitation-Flux \tab precipitation_flux \cr
+Solar-Radiation-Flux \tab solar_radiation_flux \cr
+Wind-Speed-10m \tab 10m_wind_speed \cr
+Vapour-Pressure \tab vapour_pressure \cr
+Relative-Humidity-2m \tab 2m_relative_humidity \cr
+Dew-Point_Temperature-2m \tab 2m_dewpoint_temperature \cr
+Cloud-Cover \tab cloud_cover \cr
+Snow-Thickness \tab snow_thickness \cr
+Snow-Thickness-LWE \tab snow_thickness_lwe \cr
+Precipitation-Rain-Duration-Fraction \tab liquid_precipitation_duration_fraction \cr
+Precipitation-Solid-Duration-Fraction \tab solid_precipitation_duration_fraction \cr
+}
+}
+}
+
 \section{Valid variable values}{
 \itemize{
 \item "Cloud-Cover"
@@ -120,6 +146,7 @@ but should be explicitly indicated as "Mean".
 \item "Snow-Thickness"
 \item "Vapour-Pressure"
 \item "Wind-Speed-10m"
+
 }
 }
 
@@ -135,11 +162,19 @@ but should be explicitly indicated as "Mean".
 
 \examples{
 \dontrun{
+# Extract maximum day-time temperature for a single date
 temp <- ag5_extract(coords = c(lon = 35.72636, lat = -2.197162),
-                      dates = "1991-04-22",
-                      variable = "Temperature-Air-2m",
-                      statistic = "Max-Day-Time",
-                      path = "C:/temperature_data/")
+                   dates = "1991-04-22",
+                   variable = "Temperature-Air-2m",
+                   statistic = "Max-Day-Time",
+                   path = "C:/agera5_data/")
+
+# Extract relative humidity time series (time parameter required)
+rh <- ag5_extract(coords = c(lon = 35.72636, lat = -2.197162),
+                 dates = c("2015-01-01", "2015-12-31"),
+                 variable = "Relative-Humidity-2m",
+                 time = "09h",
+                 path = "C:/agera5_data/")
 }
 
 }
@@ -147,4 +182,8 @@ temp <- ag5_extract(coords = c(lon = 35.72636, lat = -2.197162),
 Temperature conversion is made accordingly to:
 Preston-Thomas, H. (1990). The International Temperature Scale of 1990 (ITS-90).
 Metrologia, 27(1), 3-10. doi:10.1088/0026-1394/27/1/002
+}
+\seealso{
+\code{\link{ag5_download}} to download AgERA5 files from the CDS,
+\code{\link{ag5_apsim}} to prepare APSIM-formatted meteorological files.
 }

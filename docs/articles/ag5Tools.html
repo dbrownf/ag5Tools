@@ -5,14 +5,14 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>ag5Tools • ag5Tools</title>
+<title>Downloading AgERA5 data with ag5Tools • ag5Tools</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="ag5Tools">
-<meta name="description" content="ag5Tools is an R package to download and extract data from the Copernicus \\'Agrometeorological indicators from 1979 to present derived from reanalysis\\' dataset (AgERA5).&quot;">
-<meta property="og:description" content="ag5Tools is an R package to download and extract data from the Copernicus \\'Agrometeorological indicators from 1979 to present derived from reanalysis\\' dataset (AgERA5).&quot;">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Downloading AgERA5 data with ag5Tools">
+<meta name="description" content="How to set up the CDS API and download AgERA5 agrometeorological data using ag5_download().">
+<meta property="og:description" content="How to set up the CDS API and download AgERA5 agrometeorological data using ag5_download().">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ag5Tools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,7 +36,10 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/extracing_data.html">Extracing AgERA5 data with ag5Tools</a></li>
+<li><a class="dropdown-item" href="../articles/ag5_apsim.html">Preparing APSIM meteorological files with ag5Tools</a></li>
+    <li><a class="dropdown-item" href="../articles/ag5_plackett_luce.html">AgERA5 covariates in PlackettLuce models</a></li>
+    <li><a class="dropdown-item" href="../articles/ag5_workflow.html">End-to-end workflow: from CDS to crop model</a></li>
+    <li><a class="dropdown-item" href="../articles/extracing_data.html">Extracting AgERA5 data with ag5Tools</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -58,7 +61,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>ag5Tools</h1>
+      <h1>Downloading AgERA5 data with ag5Tools</h1>
             
       
 
@@ -68,43 +71,290 @@
     
     
 <div class="section level2">
-<h2 id="get-the-cds-api-key">Get the CDS API-Key<a class="anchor" aria-label="anchor" href="#get-the-cds-api-key"></a>
+<h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>To download AgERA5 data from the Copernicus Climate Data Store (CDS)
-you should first register and get your API Key from the <a href="https://cds.climate.copernicus.eu/how-to-api" class="external-link">CDS API
-Guide</a>.</p>
-<p>Once you have your API Key, you should create a file named
-“.cdsapirc”. See more details at the <a href="https://cds.climate.copernicus.eu/how-to-api" class="external-link">CDS API
-Guide</a></p>
-<p>You do not need to install Python or the ‘CDASPI’ client, ag5Tools
-will do it if required.</p>
+<p>The Copernicus “Agrometeorological indicators from 1979 to present
+derived from reanalysis” dataset (AgERA5) provides daily surface
+meteorological data at 0.1° (~11 km) resolution from 1979 to present.
+The <code><a href="../reference/ag5_download.html">ag5_download()</a></code> function gives programmatic access to
+this dataset from R via the <a href="https://cds.climate.copernicus.eu/datasets/sis-agrometeorological-indicators?tab=overview" class="external-link">Copernicus
+Climate Data Store (CDS) API</a>.</p>
+<p>Each downloaded file covers one day and one variable, stored as a
+NetCDF (<code>.nc</code>) file. Across a full year that means 365 (or
+366) files per variable, one per day.</p>
 </div>
 <div class="section level2">
-<h2 id="downloading-agera5-data">Downloading AgERA5 data<a class="anchor" aria-label="anchor" href="#downloading-agera5-data"></a>
+<h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
 </h2>
-<p>The following example downloads variable “2m_temperature”. For this
-variable there are seven statistics available:</p>
-<ul>
-<li><p>24_hour_maximum</p></li>
-<li><p>24_hour_mean</p></li>
-<li><p>24_hour_minimum</p></li>
-<li><p>day_time_maximum</p></li>
-<li><p>day_time_mean</p></li>
-<li><p>night_time_mean</p></li>
-<li><p>night_time_minimum</p></li>
-</ul>
-<p>In this case, we will download “night_time_minimum”. You should
-replace the target path to a location in your own computer where you
-want to store the downloaded data.</p>
+<div class="section level3">
+<h3 id="register-with-the-cds">1. Register with the CDS<a class="anchor" aria-label="anchor" href="#register-with-the-cds"></a>
+</h3>
+<p>Create a free account at <a href="https://cds.climate.copernicus.eu" class="external-link uri">https://cds.climate.copernicus.eu</a>.</p>
+</div>
+<div class="section level3">
+<h3 id="get-your-api-key">2. Get your API key<a class="anchor" aria-label="anchor" href="#get-your-api-key"></a>
+</h3>
+<p>After logging in, your API key is shown on your profile page. Follow
+the instructions at the <a href="https://cds.climate.copernicus.eu/how-to-api" class="external-link">CDS API Guide</a> to
+create a <code>.cdsapirc</code> configuration file in your home
+directory containing your key.</p>
+</div>
+<div class="section level3">
+<h3 id="python-and-cdsapi">3. Python and cdsapi<a class="anchor" aria-label="anchor" href="#python-and-cdsapi"></a>
+</h3>
+<p><code>ag5Tools</code> calls the CDS via the Python
+<code>cdsapi</code> library using the <code>reticulate</code> package.
+If Python or <code>cdsapi</code> are not installed,
+<code><a href="../reference/ag5_download.html">ag5_download()</a></code> will install them automatically on first
+use.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="available-variables">Available variables<a class="anchor" aria-label="anchor" href="#available-variables"></a>
+</h2>
+<p><code><a href="../reference/ag5_download.html">ag5_download()</a></code> uses the <strong>CDS API variable
+names</strong> (snake_case). These differ from the file names written to
+disk, which are used by <code><a href="../reference/ag5_extract.html">ag5_extract()</a></code>. See
+<code><a href="../articles/extracing_data.html">vignette("extracing_data")</a></code> for the mapping between the two
+naming systems.</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Variable (CDS API name)</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>2m_temperature</code></td>
+<td>2 m air temperature (multiple statistics)</td>
+</tr>
+<tr class="even">
+<td><code>2m_dewpoint_temperature</code></td>
+<td>2 m dew point temperature</td>
+</tr>
+<tr class="odd">
+<td><code>2m_relative_humidity</code></td>
+<td>2 m relative humidity (specific times of day)</td>
+</tr>
+<tr class="even">
+<td><code>precipitation_flux</code></td>
+<td>Daily precipitation (mm/day)</td>
+</tr>
+<tr class="odd">
+<td><code>liquid_precipitation_duration_fraction</code></td>
+<td>Fraction of day with liquid precipitation</td>
+</tr>
+<tr class="even">
+<td><code>solid_precipitation_duration_fraction</code></td>
+<td>Fraction of day with solid precipitation</td>
+</tr>
+<tr class="odd">
+<td><code>solar_radiation_flux</code></td>
+<td>Daily solar radiation (J/m²/day)</td>
+</tr>
+<tr class="even">
+<td><code>vapour_pressure</code></td>
+<td>Daily mean vapour pressure</td>
+</tr>
+<tr class="odd">
+<td><code>10m_wind_speed</code></td>
+<td>10 m wind speed</td>
+</tr>
+<tr class="even">
+<td><code>cloud_cover</code></td>
+<td>Daily mean cloud cover</td>
+</tr>
+<tr class="odd">
+<td><code>snow_thickness</code></td>
+<td>Snow depth</td>
+</tr>
+<tr class="even">
+<td><code>snow_thickness_lwe</code></td>
+<td>Snow liquid water equivalent</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level2">
+<h2 id="statistics">Statistics<a class="anchor" aria-label="anchor" href="#statistics"></a>
+</h2>
+<p>Some variables are available with multiple daily statistics. Provide
+the statistic name in the <code>statistic</code> argument.</p>
+<p><strong><code>2m_temperature</code></strong> — must specify one
+of:</p>
+<table class="table">
+<thead><tr class="header">
+<th>Statistic</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>24_hour_maximum</code></td>
+<td>Maximum over 24 hours</td>
+</tr>
+<tr class="even">
+<td><code>24_hour_mean</code></td>
+<td>Mean over 24 hours</td>
+</tr>
+<tr class="odd">
+<td><code>24_hour_minimum</code></td>
+<td>Minimum over 24 hours</td>
+</tr>
+<tr class="even">
+<td><code>day_time_maximum</code></td>
+<td>Maximum during daytime</td>
+</tr>
+<tr class="odd">
+<td><code>day_time_mean</code></td>
+<td>Mean during daytime</td>
+</tr>
+<tr class="even">
+<td><code>night_time_mean</code></td>
+<td>Mean during night-time</td>
+</tr>
+<tr class="odd">
+<td><code>night_time_minimum</code></td>
+<td>Minimum during night-time</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>10m_wind_speed</code></strong>,
+<strong><code>vapour_pressure</code></strong>,
+<strong><code>cloud_cover</code></strong>,
+<strong><code>2m_dewpoint_temperature</code></strong> — only
+<code>24_hour_mean</code> is available. The <code>statistic</code>
+argument must be provided.</p>
+<p><strong><code>precipitation_flux</code></strong>,
+<strong><code>solar_radiation_flux</code></strong>,
+<strong><code>snow_thickness</code></strong>,
+<strong><code>snow_thickness_lwe</code></strong>,
+<strong><code>liquid_precipitation_duration_fraction</code></strong>,
+<strong><code>solid_precipitation_duration_fraction</code></strong> — no
+<code>statistic</code> argument needed.</p>
+<p><strong><code>2m_relative_humidity</code></strong> — no
+<code>statistic</code>, but requires a <code>time</code> argument:
+<code>"06_00"</code>, <code>"09_00"</code>, <code>"12_00"</code>,
+<code>"15_00"</code>, or <code>"18_00"</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="downloading-data">Downloading data<a class="anchor" aria-label="anchor" href="#downloading-data"></a>
+</h2>
+<div class="section level3">
+<h3 id="a-single-day">A single day<a class="anchor" aria-label="anchor" href="#a-single-day"></a>
+</h3>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://agrdatasci.github.io/ag5Tools/">ag5Tools</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/ag5_download.html">ag5_download</a></span><span class="op">(</span>variable <span class="op">=</span> <span class="st">"2m_temperature"</span>,</span>
-<span>            statistic <span class="op">=</span> <span class="st">"night_time_minimum"</span>,</span>
-<span>            day <span class="op">=</span> <span class="st">"all"</span>,</span>
-<span>            month <span class="op">=</span> <span class="st">"all"</span>,</span>
-<span>            year <span class="op">=</span> <span class="fl">2015</span>,</span>
-<span>            path <span class="op">=</span> <span class="st">"C:/custom_target_folder"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/ag5_download.html">ag5_download</a></span><span class="op">(</span></span>
+<span>  variable  <span class="op">=</span> <span class="st">"2m_temperature"</span>,</span>
+<span>  statistic <span class="op">=</span> <span class="st">"24_hour_maximum"</span>,</span>
+<span>  year      <span class="op">=</span> <span class="fl">2015</span>,</span>
+<span>  month     <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>  day       <span class="op">=</span> <span class="fl">15</span>,</span>
+<span>  path      <span class="op">=</span> <span class="st">"C:/agera5_data"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="all-days-in-a-month">All days in a month<a class="anchor" aria-label="anchor" href="#all-days-in-a-month"></a>
+</h3>
+<p>Set <code>day = "all"</code> to download every day of the specified
+month.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/ag5_download.html">ag5_download</a></span><span class="op">(</span></span>
+<span>  variable  <span class="op">=</span> <span class="st">"precipitation_flux"</span>,</span>
+<span>  year      <span class="op">=</span> <span class="fl">2015</span>,</span>
+<span>  month     <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>  day       <span class="op">=</span> <span class="st">"all"</span>,</span>
+<span>  path      <span class="op">=</span> <span class="st">"C:/agera5_data"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="an-entire-year">An entire year<a class="anchor" aria-label="anchor" href="#an-entire-year"></a>
+</h3>
+<p>Set both <code>month = "all"</code> and <code>day = "all"</code> to
+download a full year.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/ag5_download.html">ag5_download</a></span><span class="op">(</span></span>
+<span>  variable  <span class="op">=</span> <span class="st">"solar_radiation_flux"</span>,</span>
+<span>  year      <span class="op">=</span> <span class="fl">2020</span>,</span>
+<span>  month     <span class="op">=</span> <span class="st">"all"</span>,</span>
+<span>  day       <span class="op">=</span> <span class="st">"all"</span>,</span>
+<span>  path      <span class="op">=</span> <span class="st">"C:/agera5_data"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="relative-humidity-requires-time">Relative humidity (requires <code>time</code>)<a class="anchor" aria-label="anchor" href="#relative-humidity-requires-time"></a>
+</h3>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/ag5_download.html">ag5_download</a></span><span class="op">(</span></span>
+<span>  variable <span class="op">=</span> <span class="st">"2m_relative_humidity"</span>,</span>
+<span>  time     <span class="op">=</span> <span class="st">"09_00"</span>,</span>
+<span>  year     <span class="op">=</span> <span class="fl">2015</span>,</span>
+<span>  month    <span class="op">=</span> <span class="st">"all"</span>,</span>
+<span>  day      <span class="op">=</span> <span class="st">"all"</span>,</span>
+<span>  path     <span class="op">=</span> <span class="st">"C:/agera5_data"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="spatial-subsetting-with-area">Spatial subsetting with <code>area</code><a class="anchor" aria-label="anchor" href="#spatial-subsetting-with-area"></a>
+</h2>
+<p>By default <code><a href="../reference/ag5_download.html">ag5_download()</a></code> downloads the full global
+extent. Use the <code>area</code> argument to restrict the download to a
+region of interest — this substantially reduces file size and download
+time.</p>
+<div class="section level3">
+<h3 id="bounding-box">Bounding box<a class="anchor" aria-label="anchor" href="#bounding-box"></a>
+</h3>
+<p>Provide a numeric vector <code>c(north, west, south, east)</code> in
+decimal degrees.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># East Africa bounding box</span></span>
+<span><span class="fu"><a href="../reference/ag5_download.html">ag5_download</a></span><span class="op">(</span></span>
+<span>  variable  <span class="op">=</span> <span class="st">"2m_temperature"</span>,</span>
+<span>  statistic <span class="op">=</span> <span class="st">"24_hour_maximum"</span>,</span>
+<span>  year      <span class="op">=</span> <span class="fl">2015</span>,</span>
+<span>  month     <span class="op">=</span> <span class="st">"all"</span>,</span>
+<span>  day       <span class="op">=</span> <span class="st">"all"</span>,</span>
+<span>  area      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">28</span>, <span class="op">-</span><span class="fl">12</span>, <span class="fl">42</span><span class="op">)</span>,</span>
+<span>  path      <span class="op">=</span> <span class="st">"C:/agera5_data"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="single-point">Single point<a class="anchor" aria-label="anchor" href="#single-point"></a>
+</h3>
+<p>Provide <code>c(lon, lat)</code>. A minimum 0.1° bounding box (one
+AgERA5 grid cell) is derived automatically.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/ag5_download.html">ag5_download</a></span><span class="op">(</span></span>
+<span>  variable  <span class="op">=</span> <span class="st">"2m_temperature"</span>,</span>
+<span>  statistic <span class="op">=</span> <span class="st">"24_hour_maximum"</span>,</span>
+<span>  year      <span class="op">=</span> <span class="fl">2015</span>,</span>
+<span>  month     <span class="op">=</span> <span class="st">"all"</span>,</span>
+<span>  day       <span class="op">=</span> <span class="st">"all"</span>,</span>
+<span>  area      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">36.68</span>, <span class="op">-</span><span class="fl">3.37</span><span class="op">)</span>,   <span class="co"># lon, lat — Arusha, Tanzania</span></span>
+<span>  path      <span class="op">=</span> <span class="st">"C:/agera5_data"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="file-organisation-on-disk">File organisation on disk<a class="anchor" aria-label="anchor" href="#file-organisation-on-disk"></a>
+</h2>
+<p>Downloaded files follow the naming convention used by the CDS and are
+organised into sub-folders by variable and statistic automatically. For
+example, daily maximum temperature files for 2015 will appear under a
+path such as:</p>
+<pre><code>C:/agera5_data/
+  Temperature-Air-2m/
+    Max-24h/
+      AgERA5_Temperature-Air-2m_Max-24h_20150101.nc
+      AgERA5_Temperature-Air-2m_Max-24h_20150102.nc
+      ...</code></pre>
+<p><code><a href="../reference/ag5_extract.html">ag5_extract()</a></code> searches the folder tree recursively, so
+you only need to provide the root <code>path</code> when extracting.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
@@ -117,7 +367,7 @@ want to store the downloaded data.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

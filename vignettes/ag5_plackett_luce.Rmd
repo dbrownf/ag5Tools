@@ -1,0 +1,204 @@
+---
+title: "AgERA5 covariates in PlackettLuce models"
+description: "Extract AgERA5 environmental variables for tricot trial locations and use them as covariates in a PlackettLuce tree model."
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{AgERA5 covariates in PlackettLuce models}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Overview
+
+[PlackettLuce](https://cran.r-project.org/package=PlackettLuce) models the probability
+of ranking outcomes and is widely used for farmer-participatory variety trials using
+the [tricot](https://tricot.bioversityinternational.org/) approach. `pltree()` extends
+this by partitioning trial sites into groups with distinct variety preferences, using
+environmental variables as splitting covariates.
+
+This article demonstrates how to:
+
+1. Derive location and date information from a tricot trial dataset.
+2. Extract AgERA5 growing-season weather covariates with `ag5_extract()`.
+3. Use those covariates in a `pltree()` model.
+
+## Packages
+
+```{r eval = FALSE}
+library(ag5Tools)
+library(PlackettLuce)
+```
+
+## Trial data: `beans`
+
+The `beans` dataset in `PlackettLuce` contains 842 tricot observations from a bean
+variety trial in Nicaragua (2015–2016). Each row records which of three randomly
+assigned varieties a farmer rated as best and worst.
+
+```{r}
+library(PlackettLuce)
+data(beans)
+str(beans[, c("variety_a", "variety_b", "variety_c",
+              "best", "worst", "lon", "lat", "planting_date", "season")])
+```
+
+The columns `lon`, `lat`, and `planting_date` give us everything needed to pull
+growing-season weather from AgERA5 for each observation.
+
+## Step 1: Derive a date range for each observation
+
+Bean trials in this dataset run approximately 90 days. We add an `end_date` column
+from `planting_date + 90`.
+
+```{r}
+beans$end_date <- beans$planting_date + 90
+range(beans$planting_date)
+range(beans$end_date)
+```
+
+## Step 2: Extract AgERA5 covariates
+
+We extract two growing-season covariates:
+
+- **Total rainfall** — sum of daily `Precipitation-Flux` (mm) over the growing season.
+- **Mean maximum temperature** — mean of daily `Temperature-Air-2m` (Max-24h, °C).
+
+The `ag5_extract()` function accepts a `data.frame` as `coords`. We need to rename
+columns to match the expected default names (`lon`, `lat`, `start_date`, `end_date`),
+or pass the column names explicitly.
+
+```{r eval = FALSE}
+library(ag5Tools)
+
+# Use explicit column names since beans uses 'planting_date' not 'start_date'
+precip_list <- ag5_extract(
+  coords     = beans,
+  lon        = "lon",
+  lat        = "lat",
+  start_date = "planting_date",
+  end_date   = "end_date",
+  variable   = "Precipitation-Flux",
+  path       = "C:/agera5_data"
+)
+
+maxt_list <- ag5_extract(
+  coords     = beans,
+  lon        = "lon",
+  lat        = "lat",
+  start_date = "planting_date",
+  end_date   = "end_date",
+  variable   = "Temperature-Air-2m",
+  statistic  = "Max-24h",
+  celsius    = TRUE,
+  path       = "C:/agera5_data"
+)
+
+# Aggregate daily series to trial-level covariates
+beans$total_rain <- sapply(precip_list, sum,  na.rm = TRUE)
+beans$mean_maxt  <- sapply(maxt_list,  mean, na.rm = TRUE)
+```
+
+To download the AgERA5 files for Nicaragua before extracting:
+
+```{r eval = FALSE}
+# Nicaragua bounding box: c(north, west, south, east)
+ag5_download(
+  variable  = "precipitation_flux",
+  year      = c(2015, 2016),
+  month     = "all",
+  day       = "all",
+  area      = c(15, -88, 11, -83),
+  path      = "C:/agera5_data"
+)
+
+ag5_download(
+  variable  = "2m_temperature",
+  statistic = "24_hour_maximum",
+  year      = c(2015, 2016),
+  month     = "all",
+  day       = "all",
+  area      = c(15, -88, 11, -83),
+  path      = "C:/agera5_data"
+)
+```
+
+## Step 3: Convert rankings to PlackettLuce format
+
+`as.rankings()` converts the tricot best/worst choices into a complete partial ranking
+matrix suitable for `PlackettLuce()` and `pltree()`.
+
+```{r eval = FALSE}
+# Build a grouped_rankings object from the tricot best/worst format
+R <- rank_tricot(data      = beans,
+                 items     = c("variety_a", "variety_b", "variety_c"),
+                 input     = c("best", "worst"),
+                 group     = TRUE)
+```
+
+## Step 4: Fit a PlackettLuce tree
+
+`pltree()` uses the environmental covariates to partition the trial sites. Terminal
+nodes with meaningfully different worth estimates indicate that variety performance
+depends on growing conditions.
+
+```{r eval = FALSE}
+pl_tree <- pltree(R ~ total_rain + mean_maxt,
+                  data    = beans,
+                  minsize = 50)
+
+print(pl_tree)
+plot(pl_tree)
+```
+
+## Step 5: Inspect worth estimates by node
+
+`itempar()` returns the worth (log-ability) of each variety within each terminal node,
+revealing which varieties perform best under wetter or hotter conditions.
+
+```{r eval = FALSE}
+itempar(pl_tree)
+```
+
+## Adding more covariates
+
+The same workflow extends to any AgERA5 variable. Further covariates commonly used
+in variety trial analyses:
+
+| Covariate | AgERA5 variable | Statistic | Aggregation |
+|---|---|---|---|
+| Growing-season solar radiation | `Solar-Radiation-Flux` | — | sum ÷ 1e6 (MJ/m²) |
+| Heat stress days | `Temperature-Air-2m` | `Max-24h` | count days > 35 °C |
+| Drought stress days | `Precipitation-Flux` | — | count days < 1 mm |
+| Mean vapour pressure | `Vapour-Pressure` | `Mean` | mean (hPa) |
+
+```{r eval = FALSE}
+radn_list <- ag5_extract(
+  coords     = beans,
+  lon        = "lon",
+  lat        = "lat",
+  start_date = "planting_date",
+  end_date   = "end_date",
+  variable   = "Solar-Radiation-Flux",
+  path       = "C:/agera5_data"
+)
+
+beans$total_radn <- sapply(radn_list, sum, na.rm = TRUE) / 1e6  # MJ/m²
+
+pl_tree2 <- pltree(R ~ total_rain + mean_maxt + total_radn,
+                   data    = beans,
+                   minsize = 50)
+plot(pl_tree2)
+```
+
+## See also
+
+- `vignette("extracing_data")` — detailed `ag5_extract()` usage
+- `vignette("ag5_workflow")` — complete download-to-extraction workflow
+- [PlackettLuce package documentation](https://cran.r-project.org/package=PlackettLuce)

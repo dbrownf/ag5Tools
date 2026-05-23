@@ -46,3 +46,4 @@ dev_data/
 
 inst/doc
 CRAN-SUBMISSION
+*.code-workspace

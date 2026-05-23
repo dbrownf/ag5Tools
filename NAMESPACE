@@ -2,6 +2,7 @@
 
 S3method(ag5_extract,data.frame)
 S3method(ag5_extract,numeric)
+export(ag5_apsim)
 export(ag5_download)
 export(ag5_extract)
 importFrom(doParallel,registerDoParallel)

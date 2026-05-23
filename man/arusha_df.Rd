@@ -3,15 +3,23 @@
 \docType{data}
 \name{arusha_df}
 \alias{arusha_df}
-\title{Example dataset for the agera5 package}
+\title{Example dataset for the ag5Tools package}
 \format{
-An object of class \code{data.frame} with 100 rows and 4 columns.
+A \code{data.frame} with 100 rows and 4 columns:
+\describe{
+\item{lon}{numeric. Longitude in decimal degrees (WGS84).}
+\item{lat}{numeric. Latitude in decimal degrees (WGS84).}
+\item{start_date}{character. Start date in \code{"YYYY-MM-DD"} format.}
+\item{end_date}{character. End date in \code{"YYYY-MM-DD"} format.}
+}
 }
 \usage{
 arusha_df
 }
 \description{
-100 points in Arusha, Tanzania
-The geographic coordinates were generated with the function st_sample from package sf
+100 random points in the Arusha region, Tanzania, with date ranges for
+demonstration of \code{\link{ag5_extract}}.
+The geographic coordinates were generated with the function \code{st_sample}
+from the \pkg{sf} package.
 }
 \keyword{datasets}

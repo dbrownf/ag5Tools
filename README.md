@@ -13,11 +13,69 @@
 
 The R package *ag5Tools* is a toolbox to download and extract data from the "Agrometeorological indicators from 1979 to present derived from reanalysis" dataset (AgERA5).
 
+
 A description of the dataset can found [here](https://cds.climate.copernicus.eu/datasets/sis-agrometeorological-indicators?tab=overview)
 
 The download function provides programmatic access to the Copernicus Climate Data Store to download AgERA5 data.
 
 A detailed description of the ag5Tools package can be found in the companion paper: https://doi.org/10.1016/j.softx.2022.101267
+
+## Package Documentation
+
+### Main Functions
+
+- **ag5_download()**  
+    Downloads AgERA5 data from the Copernicus Climate Data Store using the Python `cdsapi` library.  
+    **Key arguments:**  
+    - `variable`: Name of the variable to download (e.g., `"2m_temperature"`, `"precipitation_flux"`).  
+    - `statistic`: Required for some variables (e.g., `"24_hour_maximum"`).  
+    - `year`, `month`, `day`: Time period to download.  
+    - `area`: Geographic extent — `NULL` for global, `c(N, W, S, E)` for a bounding box, or `c(lon, lat)` for a single point (a minimum bounding box is derived automatically).  
+    - `path`: Target folder for downloaded files.  
+    - See the [reference manual](https://agrdatasci.github.io/ag5Tools/reference/ag5_download.html) for all options.
+
+- **ag5_extract()**  
+    Extracts data from downloaded AgERA5 files for specific coordinates and dates.  
+    **Key arguments:**  
+    - `coords`: Numeric vector `c(lon, lat)` or a `data.frame` with location and date columns.  
+    - `variable`: Variable to extract (e.g., `"Temperature-Air-2m"`).  
+    - `statistic`: Required for some variables (e.g., `"Max-24h"`).  
+    - `dates`: Single date or `c(start_date, end_date)` for a time series.  
+    - `path`: Folder containing AgERA5 `.nc` files.  
+    - `celsius`: Convert temperature from Kelvin to Celsius (logical).  
+    - See the [reference manual](https://agrdatasci.github.io/ag5Tools/reference/ag5_extract.html) for all options.
+
+- **ag5_apsim()**  
+    Extracts all AgERA5 variables required by the [APSIM](https://www.apsim.info/) crop model for a single location and date range, applies unit conversions, computes site constants (`tav`, `amp`), and writes a ready-to-use meteorological file.  
+    **Key arguments:**  
+    - `coords`: Numeric vector `c(lon, lat)`.  
+    - `start_date`, `end_date`: Date range in `"YYYY-MM-DD"` format.  
+    - `variables`: `"all"` (default), `"required"` (maxt, mint, rain, radn only), or a character vector of specific variable names.  
+    - `filename`: Output file path without extension. If `NULL`, returns an annotated `data.frame`.  
+    - `format`: `"classic"` (space-delimited `.met`) or `"apsimng"` (`.csv` + `_constants.txt`).  
+    - `download`: If `TRUE`, missing AgERA5 files are downloaded automatically before extraction.  
+    - See the [reference manual](https://agrdatasci.github.io/ag5Tools/reference/ag5_apsim.html) for all options.
+
+### Available Variables
+
+`ag5_download()` uses the CDS API variable names; `ag5_extract()` and `ag5_apsim()` use the file names written to disk by the CDS. These differ — see the table below.
+
+| ag5_extract / ag5_apsim | ag5_download | Description |
+|---|---|---|
+| Cloud-Cover | cloud_cover | Daily mean cloud cover |
+| Precipitation-Flux | precipitation_flux | Daily precipitation (mm/day) |
+| Precipitation-Rain-Duration-Fraction | liquid_precipitation_duration_fraction | Fraction of day with liquid precipitation |
+| Precipitation-Solid-Duration-Fraction | solid_precipitation_duration_fraction | Fraction of day with solid precipitation |
+| Snow-Thickness | snow_thickness | Snow depth |
+| Snow-Thickness-LWE | snow_thickness_lwe | Snow liquid water equivalent |
+| Solar-Radiation-Flux | solar_radiation_flux | Daily solar radiation (J/m²/day) |
+| Temperature-Air-2m | 2m_temperature | 2 m air temperature (multiple statistics available) |
+| Dew-Point_Temperature-2m | 2m_dewpoint_temperature | 2 m dew point temperature |
+| Vapour-Pressure | vapour_pressure | Daily mean vapour pressure |
+| Wind-Speed-10m | 10m_wind_speed | 10 m wind speed |
+| Relative-Humidity-2m | 2m_relative_humidity | 2 m relative humidity (specific times of day) |
+
+For full details see the [package documentation](https://agrdatasci.github.io/ag5Tools/reference/index.html).
 
 ## Data license
 
@@ -64,14 +122,54 @@ ag5_download(variable = "2m_temperature",
 
 #### Extracting data
 
-To extract maximum day temperature ("Max-Day-Time") of "2m_temperature"
+To extract maximum day temperature ("Max-Day-Time") of "Temperature-Air-2m":
 
 ``` r
 ag5_extract(coords = c(35.726364, -2.197162), 
             dates = "1995-01-23", 
-            variable = "2m_temperature",
+            variable = "Temperature-Air-2m",
             statistic = "Max-Day-Time", 
             path = "C:/agera5_data")
+```
+
+#### Preparing APSIM meteorological files
+
+To extract all required variables for a location and write a classic APSIM `.met` file:
+
+``` r
+ag5_apsim(
+  coords     = c(35.73, -2.20),
+  start_date = "2015-01-01",
+  end_date   = "2015-12-31",
+  path       = "C:/agera5_data",
+  filename   = "C:/apsim/site_2015",
+  format     = "classic"
+)
+```
+
+To get only the required APSIM variables as a `data.frame` without writing a file:
+
+``` r
+met <- ag5_apsim(
+  coords     = c(35.73, -2.20),
+  start_date = "2015-01-01",
+  end_date   = "2015-12-31",
+  variables  = "required",
+  path       = "C:/agera5_data"
+)
+```
+
+If the AgERA5 files have not been downloaded yet, set `download = TRUE` to fetch them automatically:
+
+``` r
+ag5_apsim(
+  coords     = c(35.73, -2.20),
+  start_date = "2015-01-01",
+  end_date   = "2015-12-31",
+  path       = "C:/agera5_data",
+  filename   = "C:/apsim/site_2015",
+  download   = TRUE
+)
 ```
 
 ## Acknowledgements

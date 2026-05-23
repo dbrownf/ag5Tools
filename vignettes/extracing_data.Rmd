@@ -1,8 +1,8 @@
 ---
-title: "Extracing AgERA5 data with ag5Tools"
+title: "Extracting AgERA5 data with ag5Tools"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Extracing AgERA5 data with ag5Tools}
+  %\VignetteIndexEntry{Extracting AgERA5 data with ag5Tools}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

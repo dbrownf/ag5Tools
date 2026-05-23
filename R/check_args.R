@@ -69,7 +69,7 @@ check_temp_vars <- function(x){
 check_vars_with_stat <- function(x){
 
   vars_with_stat <- c("Temperature-Air-2m",
-                      "Cloud_Cover",
+                      "Cloud-Cover",
                       "Snow-Thickness-LWE",
                       "Dew-Point_Temperature-2m",
                       "Snow-Thickness",

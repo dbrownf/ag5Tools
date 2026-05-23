@@ -11,8 +11,8 @@
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Toolbox for Downloading and Extracting Copernicus AgERA5 Data">
-<meta name="description" content='Tools for downloading and extracting data from the Copernicus "Agrometeorological indicators from 1979 to present derived from reanalysis" &lt;https://cds.climate.copernicus.eu/datasets/sis-agrometeorological-indicators?tab=overview&gt; (AgERA5).'>
-<meta property="og:description" content='Tools for downloading and extracting data from the Copernicus "Agrometeorological indicators from 1979 to present derived from reanalysis" &lt;https://cds.climate.copernicus.eu/datasets/sis-agrometeorological-indicators?tab=overview&gt; (AgERA5).'>
+<meta name="description" content='Tools for downloading, extracting, and formatting data from the Copernicus "Agrometeorological indicators from 1979 to present derived from reanalysis" &lt;https://cds.climate.copernicus.eu/datasets/sis-agrometeorological-indicators?tab=overview&gt; (AgERA5). Includes convenience functions for preparing AgERA5 data for use in crop models such as APSIM.'>
+<meta property="og:description" content='Tools for downloading, extracting, and formatting data from the Copernicus "Agrometeorological indicators from 1979 to present derived from reanalysis" &lt;https://cds.climate.copernicus.eu/datasets/sis-agrometeorological-indicators?tab=overview&gt; (AgERA5). Includes convenience functions for preparing AgERA5 data for use in crop models such as APSIM.'>
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">ag5Tools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,7 +36,10 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/extracing_data.html">Extracing AgERA5 data with ag5Tools</a></li>
+<li><a class="dropdown-item" href="articles/ag5_apsim.html">Preparing APSIM meteorological files with ag5Tools</a></li>
+    <li><a class="dropdown-item" href="articles/ag5_plackett_luce.html">AgERA5 covariates in PlackettLuce models</a></li>
+    <li><a class="dropdown-item" href="articles/ag5_workflow.html">End-to-end workflow: from CDS to crop model</a></li>
+    <li><a class="dropdown-item" href="articles/extracing_data.html">Extracting AgERA5 data with ag5Tools</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
@@ -69,6 +72,168 @@
 <p>A detailed description of the ag5Tools package can be found in the companion paper: <a href="https://doi.org/10.1016/j.softx.2022.101267" class="external-link uri">https://doi.org/10.1016/j.softx.2022.101267</a></p>
 </div>
 <div class="section level2">
+<h2 id="package-documentation">Package Documentation<a class="anchor" aria-label="anchor" href="#package-documentation"></a>
+</h2>
+<div class="section level3">
+<h3 id="main-functions">Main Functions<a class="anchor" aria-label="anchor" href="#main-functions"></a>
+</h3>
+<ul>
+<li>
+<strong>ag5_download()</strong><br>
+Downloads AgERA5 data from the Copernicus Climate Data Store using the Python <code>cdsapi</code> library.<br><strong>Key arguments:</strong>
+<ul>
+<li>
+<code>variable</code>: Name of the variable to download (e.g., <code>"2m_temperature"</code>, <code>"precipitation_flux"</code>).<br>
+</li>
+<li>
+<code>statistic</code>: Required for some variables (e.g., <code>"24_hour_maximum"</code>).<br>
+</li>
+<li>
+<code>year</code>, <code>month</code>, <code>day</code>: Time period to download.<br>
+</li>
+<li>
+<code>area</code>: Geographic extent — <code>NULL</code> for global, <code>c(N, W, S, E)</code> for a bounding box, or <code>c(lon, lat)</code> for a single point (a minimum bounding box is derived automatically).<br>
+</li>
+<li>
+<code>path</code>: Target folder for downloaded files.<br>
+</li>
+<li>See the <a href="https://agrdatasci.github.io/ag5Tools/reference/ag5_download.html">reference manual</a> for all options.</li>
+</ul>
+</li>
+<li>
+<strong>ag5_extract()</strong><br>
+Extracts data from downloaded AgERA5 files for specific coordinates and dates.<br><strong>Key arguments:</strong>
+<ul>
+<li>
+<code>coords</code>: Numeric vector <code>c(lon, lat)</code> or a <code>data.frame</code> with location and date columns.<br>
+</li>
+<li>
+<code>variable</code>: Variable to extract (e.g., <code>"Temperature-Air-2m"</code>).<br>
+</li>
+<li>
+<code>statistic</code>: Required for some variables (e.g., <code>"Max-24h"</code>).<br>
+</li>
+<li>
+<code>dates</code>: Single date or <code>c(start_date, end_date)</code> for a time series.<br>
+</li>
+<li>
+<code>path</code>: Folder containing AgERA5 <code>.nc</code> files.<br>
+</li>
+<li>
+<code>celsius</code>: Convert temperature from Kelvin to Celsius (logical).<br>
+</li>
+<li>See the <a href="https://agrdatasci.github.io/ag5Tools/reference/ag5_extract.html">reference manual</a> for all options.</li>
+</ul>
+</li>
+<li>
+<strong>ag5_apsim()</strong><br>
+Extracts all AgERA5 variables required by the <a href="https://www.apsim.info/" class="external-link">APSIM</a> crop model for a single location and date range, applies unit conversions, computes site constants (<code>tav</code>, <code>amp</code>), and writes a ready-to-use meteorological file.<br><strong>Key arguments:</strong>
+<ul>
+<li>
+<code>coords</code>: Numeric vector <code>c(lon, lat)</code>.<br>
+</li>
+<li>
+<code>start_date</code>, <code>end_date</code>: Date range in <code>"YYYY-MM-DD"</code> format.<br>
+</li>
+<li>
+<code>variables</code>: <code>"all"</code> (default), <code>"required"</code> (maxt, mint, rain, radn only), or a character vector of specific variable names.<br>
+</li>
+<li>
+<code>filename</code>: Output file path without extension. If <code>NULL</code>, returns an annotated <code>data.frame</code>.<br>
+</li>
+<li>
+<code>format</code>: <code>"classic"</code> (space-delimited <code>.met</code>) or <code>"apsimng"</code> (<code>.csv</code> + <code>_constants.txt</code>).<br>
+</li>
+<li>
+<code>download</code>: If <code>TRUE</code>, missing AgERA5 files are downloaded automatically before extraction.<br>
+</li>
+<li>See the <a href="https://agrdatasci.github.io/ag5Tools/reference/ag5_apsim.html">reference manual</a> for all options.</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="available-variables">Available Variables<a class="anchor" aria-label="anchor" href="#available-variables"></a>
+</h3>
+<p><code><a href="reference/ag5_download.html">ag5_download()</a></code> uses the CDS API variable names; <code><a href="reference/ag5_extract.html">ag5_extract()</a></code> and <code><a href="reference/ag5_apsim.html">ag5_apsim()</a></code> use the file names written to disk by the CDS. These differ — see the table below.</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>ag5_extract / ag5_apsim</th>
+<th>ag5_download</th>
+<th>Description</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Cloud-Cover</td>
+<td>cloud_cover</td>
+<td>Daily mean cloud cover</td>
+</tr>
+<tr class="even">
+<td>Precipitation-Flux</td>
+<td>precipitation_flux</td>
+<td>Daily precipitation (mm/day)</td>
+</tr>
+<tr class="odd">
+<td>Precipitation-Rain-Duration-Fraction</td>
+<td>liquid_precipitation_duration_fraction</td>
+<td>Fraction of day with liquid precipitation</td>
+</tr>
+<tr class="even">
+<td>Precipitation-Solid-Duration-Fraction</td>
+<td>solid_precipitation_duration_fraction</td>
+<td>Fraction of day with solid precipitation</td>
+</tr>
+<tr class="odd">
+<td>Snow-Thickness</td>
+<td>snow_thickness</td>
+<td>Snow depth</td>
+</tr>
+<tr class="even">
+<td>Snow-Thickness-LWE</td>
+<td>snow_thickness_lwe</td>
+<td>Snow liquid water equivalent</td>
+</tr>
+<tr class="odd">
+<td>Solar-Radiation-Flux</td>
+<td>solar_radiation_flux</td>
+<td>Daily solar radiation (J/m²/day)</td>
+</tr>
+<tr class="even">
+<td>Temperature-Air-2m</td>
+<td>2m_temperature</td>
+<td>2 m air temperature (multiple statistics available)</td>
+</tr>
+<tr class="odd">
+<td>Dew-Point_Temperature-2m</td>
+<td>2m_dewpoint_temperature</td>
+<td>2 m dew point temperature</td>
+</tr>
+<tr class="even">
+<td>Vapour-Pressure</td>
+<td>vapour_pressure</td>
+<td>Daily mean vapour pressure</td>
+</tr>
+<tr class="odd">
+<td>Wind-Speed-10m</td>
+<td>10m_wind_speed</td>
+<td>10 m wind speed</td>
+</tr>
+<tr class="even">
+<td>Relative-Humidity-2m</td>
+<td>2m_relative_humidity</td>
+<td>2 m relative humidity (specific times of day)</td>
+</tr>
+</tbody>
+</table>
+<p>For full details see the <a href="https://agrdatasci.github.io/ag5Tools/reference/index.html">package documentation</a>.</p>
+</div>
+</div>
+<div class="section level2">
 <h2 id="data-license">Data license<a class="anchor" aria-label="anchor" href="#data-license"></a>
 </h2>
 <p>The <em>ag5Tools</em> package does not distribute data, it only provides access to the Climate Data Store through the Python cdsapi.</p>
@@ -81,7 +246,7 @@
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"ag5Tools"</span><span class="op">)</span></span></code></pre></div>
 <p>The development version could be installed using</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"agrdatasci/ag5Tools"</span>, build_vignettes <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"agrdatasci/ag5Tools"</span>, build_vignettes <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="downloading-agera5-data">Downloading AgERA5 data<a class="anchor" aria-label="anchor" href="#downloading-agera5-data"></a>
@@ -117,13 +282,46 @@
 <div class="section level4">
 <h4 id="extracting-data">Extracting data<a class="anchor" aria-label="anchor" href="#extracting-data"></a>
 </h4>
-<p>To extract maximum day temperature (“Max-Day-Time”) of “2m_temperature”</p>
+<p>To extract maximum day temperature (“Max-Day-Time”) of “Temperature-Air-2m”:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/ag5_extract.html">ag5_extract</a></span><span class="op">(</span>coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">35.726364</span>, <span class="op">-</span><span class="fl">2.197162</span><span class="op">)</span>, </span>
 <span>            dates <span class="op">=</span> <span class="st">"1995-01-23"</span>, </span>
-<span>            variable <span class="op">=</span> <span class="st">"2m_temperature"</span>,</span>
+<span>            variable <span class="op">=</span> <span class="st">"Temperature-Air-2m"</span>,</span>
 <span>            statistic <span class="op">=</span> <span class="st">"Max-Day-Time"</span>, </span>
 <span>            path <span class="op">=</span> <span class="st">"C:/agera5_data"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="preparing-apsim-meteorological-files">Preparing APSIM meteorological files<a class="anchor" aria-label="anchor" href="#preparing-apsim-meteorological-files"></a>
+</h4>
+<p>To extract all required variables for a location and write a classic APSIM <code>.met</code> file:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/ag5_apsim.html">ag5_apsim</a></span><span class="op">(</span></span>
+<span>  coords     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">35.73</span>, <span class="op">-</span><span class="fl">2.20</span><span class="op">)</span>,</span>
+<span>  start_date <span class="op">=</span> <span class="st">"2015-01-01"</span>,</span>
+<span>  end_date   <span class="op">=</span> <span class="st">"2015-12-31"</span>,</span>
+<span>  path       <span class="op">=</span> <span class="st">"C:/agera5_data"</span>,</span>
+<span>  filename   <span class="op">=</span> <span class="st">"C:/apsim/site_2015"</span>,</span>
+<span>  format     <span class="op">=</span> <span class="st">"classic"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>To get only the required APSIM variables as a <code>data.frame</code> without writing a file:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">met</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/ag5_apsim.html">ag5_apsim</a></span><span class="op">(</span></span>
+<span>  coords     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">35.73</span>, <span class="op">-</span><span class="fl">2.20</span><span class="op">)</span>,</span>
+<span>  start_date <span class="op">=</span> <span class="st">"2015-01-01"</span>,</span>
+<span>  end_date   <span class="op">=</span> <span class="st">"2015-12-31"</span>,</span>
+<span>  variables  <span class="op">=</span> <span class="st">"required"</span>,</span>
+<span>  path       <span class="op">=</span> <span class="st">"C:/agera5_data"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>If the AgERA5 files have not been downloaded yet, set <code>download = TRUE</code> to fetch them automatically:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/ag5_apsim.html">ag5_apsim</a></span><span class="op">(</span></span>
+<span>  coords     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">35.73</span>, <span class="op">-</span><span class="fl">2.20</span><span class="op">)</span>,</span>
+<span>  start_date <span class="op">=</span> <span class="st">"2015-01-01"</span>,</span>
+<span>  end_date   <span class="op">=</span> <span class="st">"2015-12-31"</span>,</span>
+<span>  path       <span class="op">=</span> <span class="st">"C:/agera5_data"</span>,</span>
+<span>  filename   <span class="op">=</span> <span class="st">"C:/apsim/site_2015"</span>,</span>
+<span>  download   <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 </div>
@@ -212,7 +410,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

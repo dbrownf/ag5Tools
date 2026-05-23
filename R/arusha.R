@@ -1,8 +1,15 @@
-#'Example dataset for the agera5 package
+#' Example dataset for the ag5Tools package
 #'
-#'100 points in Arusha, Tanzania
-#'The geographic coordinates were generated with the function st_sample from package sf
+#' 100 random points in the Arusha region, Tanzania, with date ranges for
+#' demonstration of \code{\link{ag5_extract}}.
+#' The geographic coordinates were generated with the function \code{st_sample}
+#' from the \pkg{sf} package.
 #'
-#'
-#'
+#' @format A \code{data.frame} with 100 rows and 4 columns:
+#' \describe{
+#'   \item{lon}{numeric. Longitude in decimal degrees (WGS84).}
+#'   \item{lat}{numeric. Latitude in decimal degrees (WGS84).}
+#'   \item{start_date}{character. Start date in \code{"YYYY-MM-DD"} format.}
+#'   \item{end_date}{character. End date in \code{"YYYY-MM-DD"} format.}
+#' }
 "arusha_df"

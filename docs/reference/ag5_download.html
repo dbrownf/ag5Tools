@@ -25,7 +25,7 @@ will do it if required."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">ag5Tools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,7 +37,10 @@ will do it if required."></head><body>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/extracing_data.html">Extracing AgERA5 data with ag5Tools</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/ag5_apsim.html">Preparing APSIM meteorological files with ag5Tools</a></li>
+    <li><a class="dropdown-item" href="../articles/ag5_plackett_luce.html">AgERA5 covariates in PlackettLuce models</a></li>
+    <li><a class="dropdown-item" href="../articles/ag5_workflow.html">End-to-end workflow: from CDS to crop model</a></li>
+    <li><a class="dropdown-item" href="../articles/extracing_data.html">Extracting AgERA5 data with ag5Tools</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -124,9 +127,11 @@ The folder should exist and the user should have write permission.</p></dd>
 
 
 <dt id="arg-area">area<a class="anchor" aria-label="anchor" href="#arg-area"></a></dt>
-<dd><p>A numeric vector of length = 4
-Values represent geographic coordinates for the area of interest
-in this order (north, west, south, east). If NULL it will download the whole available region.</p></dd>
+<dd><p>Controls the geographic extent of the download. Three forms are accepted:</p><ul><li><p><code>NULL</code> (default) — downloads the full global extent.</p></li>
+<li><p>A numeric vector of length 4 <code>c(north, west, south, east)</code> — downloads the specified bounding box.</p></li>
+<li><p>A numeric vector of length 2 <code>c(lon, lat)</code> — interpreted as a single point;
+a minimum bounding box of 0.1 degrees (one AgERA5 grid cell) is derived automatically.</p></li>
+</ul></dd>
 
 </dl></div>
     <div class="section level2">
@@ -179,17 +184,59 @@ be explicitly indicated.</p><ul><li><p>cloud_cover</p></li>
 <li><p>vapour_pressure</p></li>
 <li><p>10m_wind_speed</p></li>
 </ul></div>
+    <div class="section level2">
+    <h2 id="note-on-variable-and-statistic-naming">Note on variable and statistic naming<a class="anchor" aria-label="anchor" href="#note-on-variable-and-statistic-naming"></a></h2>
+    <p>This function uses the <strong>CDS API variable names</strong> as expected by the Copernicus
+Climate Data Store (e.g. <code>"2m_temperature"</code>, <code>"24_hour_maximum"</code>,
+<code>"06_00"</code>). The files written to disk by the CDS use a different naming
+convention, which is what <code><a href="ag5_extract.html">ag5_extract</a></code> and <code><a href="ag5_apsim.html">ag5_apsim</a></code>
+require (e.g. <code>"Temperature-Air-2m"</code>, <code>"Max-24h"</code>, <code>"06h"</code>).
+The two systems reflect the upstream API and file formats respectively;
+ag5Tools does not modify either.</p><div class="section">
+<h3 id="variable-name-mapping-cds-api-file-extract-">Variable name mapping (CDS API → file / extract)<a class="anchor" aria-label="anchor" href="#variable-name-mapping-cds-api-file-extract-"></a></h3>
+
+
+<table class="table table"><tr><td><strong>ag5_download</strong></td><td><strong>ag5_extract</strong></td></tr><tr><td>2m_temperature</td><td>Temperature-Air-2m</td></tr><tr><td>precipitation_flux</td><td>Precipitation-Flux</td></tr><tr><td>solar_radiation_flux</td><td>Solar-Radiation-Flux</td></tr><tr><td>10m_wind_speed</td><td>Wind-Speed-10m</td></tr><tr><td>vapour_pressure</td><td>Vapour-Pressure</td></tr><tr><td>2m_relative_humidity</td><td>Relative-Humidity-2m</td></tr><tr><td>2m_dewpoint_temperature</td><td>Dew-Point_Temperature-2m</td></tr><tr><td>cloud_cover</td><td>Cloud-Cover</td></tr><tr><td>snow_thickness</td><td>Snow-Thickness</td></tr><tr><td>snow_thickness_lwe</td><td>Snow-Thickness-LWE</td></tr><tr><td>liquid_precipitation_duration_fraction</td><td>Precipitation-Rain-Duration-Fraction</td></tr><tr><td>solid_precipitation_duration_fraction</td><td>Precipitation-Solid-Duration-Fraction</td></tr></table></div>
+
+<div class="section">
+<h3 id="statistic-name-mapping-for-m-temperature-cds-api-file-extract-">Statistic name mapping for 2m_temperature (CDS API → file / extract)<a class="anchor" aria-label="anchor" href="#statistic-name-mapping-for-m-temperature-cds-api-file-extract-"></a></h3>
+
+
+<table class="table table"><tr><td><strong>ag5_download</strong></td><td><strong>ag5_extract</strong></td></tr><tr><td>24_hour_maximum</td><td>Max-24h</td></tr><tr><td>24_hour_mean</td><td>Mean-24h</td></tr><tr><td>24_hour_minimum</td><td>Min-24h</td></tr><tr><td>day_time_maximum</td><td>Max-Day-Time</td></tr><tr><td>day_time_mean</td><td>Mean-Day-Time</td></tr><tr><td>night_time_mean</td><td>Mean-Night-Time</td></tr><tr><td>night_time_minimum</td><td>Min-Night-Time</td></tr></table></div>
+
+<div class="section">
+<h3 id="time-name-mapping-for-m-relative-humidity-cds-api-file-extract-">Time name mapping for 2m_relative_humidity (CDS API → file / extract)<a class="anchor" aria-label="anchor" href="#time-name-mapping-for-m-relative-humidity-cds-api-file-extract-"></a></h3>
+
+
+<p>CDS API: <code>"06_00"</code>, <code>"09_00"</code>, <code>"12_00"</code>, <code>"15_00"</code>, <code>"18_00"</code></p>
+<p>ag5_extract / ag5_apsim: <code>"06h"</code>, <code>"09h"</code>, <code>"12h"</code>, <code>"15h"</code>, <code>"18h"</code></p>
+</div>
+
+    </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p><code><a href="ag5_extract.html">ag5_extract</a></code> to extract data from downloaded files,
+<code><a href="ag5_apsim.html">ag5_apsim</a></code> to prepare APSIM-formatted meteorological files.</p></div>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="co"># Download all daily 2m_temperature (night-time minimum) for 2015</span></span></span>
 <span class="r-in"><span><span class="fu">ag5_download</span><span class="op">(</span>variable <span class="op">=</span> <span class="st">"2m_temperature"</span>,</span></span>
 <span class="r-in"><span>            statistic <span class="op">=</span> <span class="st">"night_time_minimum"</span>,</span></span>
 <span class="r-in"><span>            day <span class="op">=</span> <span class="st">"all"</span>,</span></span>
 <span class="r-in"><span>            month <span class="op">=</span> <span class="st">"all"</span>,</span></span>
 <span class="r-in"><span>            year <span class="op">=</span> <span class="fl">2015</span>,</span></span>
-<span class="r-in"><span>            path <span class="op">=</span> <span class="st">"C:/custom_target_folder"</span></span></span>
-<span class="r-in"><span>            <span class="op">)</span></span></span>
+<span class="r-in"><span>            path <span class="op">=</span> <span class="st">"C:/custom_target_folder"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Download precipitation for a single point location (automatic bounding box)</span></span></span>
+<span class="r-in"><span><span class="fu">ag5_download</span><span class="op">(</span>variable <span class="op">=</span> <span class="st">"precipitation_flux"</span>,</span></span>
+<span class="r-in"><span>            day <span class="op">=</span> <span class="st">"all"</span>,</span></span>
+<span class="r-in"><span>            month <span class="op">=</span> <span class="st">"all"</span>,</span></span>
+<span class="r-in"><span>            year <span class="op">=</span> <span class="fl">2015</span>,</span></span>
+<span class="r-in"><span>            area <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">35.73</span>, <span class="op">-</span><span class="fl">2.20</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>            path <span class="op">=</span> <span class="st">"C:/custom_target_folder"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>            <span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
@@ -203,7 +250,7 @@ be explicitly indicated.</p><ul><li><p>cloud_cover</p></li>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

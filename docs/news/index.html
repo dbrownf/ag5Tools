@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ag5Tools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -19,7 +19,10 @@
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/extracing_data.html">Extracing AgERA5 data with ag5Tools</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/ag5_apsim.html">Preparing APSIM meteorological files with ag5Tools</a></li>
+    <li><a class="dropdown-item" href="../articles/ag5_plackett_luce.html">AgERA5 covariates in PlackettLuce models</a></li>
+    <li><a class="dropdown-item" href="../articles/ag5_workflow.html">End-to-end workflow: from CDS to crop model</a></li>
+    <li><a class="dropdown-item" href="../articles/extracing_data.html">Extracting AgERA5 data with ag5Tools</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -37,7 +40,20 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.0.3" id="ag5tools-003">ag5Tools 0.0.3<a class="anchor" aria-label="anchor" href="#ag5tools-003"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.0.4" id="ag5tools-004">ag5Tools 0.0.4<a class="anchor" aria-label="anchor" href="#ag5tools-004"></a></h2>
+<div class="section level3">
+<h3 id="new-functions-0-0-4">New functions<a class="anchor" aria-label="anchor" href="#new-functions-0-0-4"></a></h3>
+<ul><li>
+<code><a href="../reference/ag5_apsim.html">ag5_apsim()</a></code>: extracts AgERA5 data for a location and date range and formats it for use in APSIM. Supports classic <code>.met</code> and APSIM Next Generation <code>.csv</code> output, variable selection (<code>"all"</code>, <code>"required"</code>, or a custom vector), optional auto-download of missing files, and returns an annotated <code>data.frame</code> when no filename is provided.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="enhancements-0-0-4">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-0-0-4"></a></h3>
+<ul><li>
+<code><a href="../reference/ag5_download.html">ag5_download()</a></code>: the <code>area</code> parameter now accepts a length-2 vector <code>c(lon, lat)</code> in addition to a length-4 bounding box. A minimum 0.1-degree bounding box is derived automatically from the point coordinates.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.3" id="ag5tools-003">ag5Tools 0.0.3<a class="anchor" aria-label="anchor" href="#ag5tools-003"></a></h2><p class="text-muted">CRAN release: 2026-03-25</p>
 <ul><li>Add “area” parameter to ag5_download</li>
 <li>Fix problem with variable names and statistics</li>
 </ul></div>
@@ -69,7 +85,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

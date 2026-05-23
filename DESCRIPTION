@@ -1,6 +1,6 @@
 Package: ag5Tools
 Title: Toolbox for Downloading and Extracting Copernicus AgERA5 Data 
-Version: 0.0.3
+Version: 0.0.4
 Authors@R: c(person(given = "David",
           family = "Brown",
           role = c("aut", "cre"),
@@ -13,9 +13,10 @@ Authors@R: c(person(given = "David",
           comment = c(ORCID = "0000-0001-7554-2558")),
           person("Sytze", "de Bruin", role = c("ths"),
           comment = c(ORCID = "0000-0002-6884-2832")))
-Description: Tools for downloading and extracting data from the Copernicus "Agrometeorological indicators 
-  from 1979 to present derived from reanalysis"
+Description: Tools for downloading, extracting, and formatting data from the Copernicus
+  "Agrometeorological indicators from 1979 to present derived from reanalysis"
   <https://cds.climate.copernicus.eu/datasets/sis-agrometeorological-indicators?tab=overview> (AgERA5).
+  Includes convenience functions for preparing AgERA5 data for use in crop models such as APSIM.
 Config/reticulate/autoconfigure:
   list(
     packages = list(
@@ -26,11 +27,11 @@ Depends: R (>= 3.5.0)
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Imports: terra, reticulate, fs, doParallel, foreach
+Imports: terra, reticulate, fs, doParallel, foreach, parallel
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Suggests: 
     rmarkdown,
     knitr
 VignetteBuilder: knitr
 URL: https://agrdatasci.github.io/ag5Tools/
+Config/roxygen2/version: 8.0.0

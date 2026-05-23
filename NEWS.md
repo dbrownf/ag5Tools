@@ -1,3 +1,13 @@
+# ag5Tools 0.0.4
+
+## New functions
+
+- `ag5_apsim()`: extracts AgERA5 data for a location and date range and formats it for use in APSIM. Supports classic `.met` and APSIM Next Generation `.csv` output, variable selection (`"all"`, `"required"`, or a custom vector), optional auto-download of missing files, and returns an annotated `data.frame` when no filename is provided.
+
+## Enhancements
+
+- `ag5_download()`: the `area` parameter now accepts a length-2 vector `c(lon, lat)` in addition to a length-4 bounding box. A minimum 0.1-degree bounding box is derived automatically from the point coordinates.
+
 # ag5Tools 0.0.3
 - Add "area" parameter to ag5_download
 - Fix problem with variable names and statistics

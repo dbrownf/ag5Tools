@@ -15,7 +15,7 @@ and location, where the first dates value is the start date and the second the e
 
     <a class="navbar-brand me-2" href="../index.html">ag5Tools</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -27,7 +27,10 @@ and location, where the first dates value is the start date and the second the e
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/extracing_data.html">Extracing AgERA5 data with ag5Tools</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/ag5_apsim.html">Preparing APSIM meteorological files with ag5Tools</a></li>
+    <li><a class="dropdown-item" href="../articles/ag5_plackett_luce.html">AgERA5 covariates in PlackettLuce models</a></li>
+    <li><a class="dropdown-item" href="../articles/ag5_workflow.html">End-to-end workflow: from CDS to crop model</a></li>
+    <li><a class="dropdown-item" href="../articles/extracing_data.html">Extracting AgERA5 data with ag5Tools</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -122,7 +125,8 @@ or the column name in the case of <code>data.frame</code></p></dd>
 
 
 <dt id="arg-celsius">celsius<a class="anchor" aria-label="anchor" href="#arg-celsius"></a></dt>
-<dd><p>logical Only for variables "Temperature-Air-2m" and "2m_dewpoint_temperature".</p></dd>
+<dd><p>logical Only for variables "Temperature-Air-2m" and "2m_dewpoint_temperature".
+If <code>TRUE</code> the values are converted from Kelvin to Celsius. Default is <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-parallel">parallel<a class="anchor" aria-label="anchor" href="#arg-parallel"></a></dt>
@@ -146,18 +150,30 @@ or the column name in the case of <code>data.frame</code></p></dd>
 
 
 <dt id="arg-ncores">ncores<a class="anchor" aria-label="anchor" href="#arg-ncores"></a></dt>
-<dd><p>Number of cores to use with parallel. If NULL and parallel is ON, half the available cores will be used.
-If <code>TRUE</code> the values are converted from Kelvin to Celsius. Default is <code>FALSE</code></p></dd>
+<dd><p>Number of cores to use with parallel. If NULL and parallel is ON, half the available cores will be used.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p><code>numeric</code> vector with length equal to the number of dates between first and
-second date. The returned vecter is a named vector, with requested dates as names.
+second date. The returned vector is a named vector, with requested dates as names.
 If only one date is provided the function returns a <code>numeric</code> vector
 with <code>length = 1</code>.
 If <code>coords</code> is a <code>data.frame</code>, the function returns a <code>list</code> of
 <code>numeric</code> vectors, each one corresponding to the rows in the input <code>data.frame</code></p>
+    </div>
+    <div class="section level2">
+    <h2 id="note-on-variable-and-statistic-naming">Note on variable and statistic naming<a class="anchor" aria-label="anchor" href="#note-on-variable-and-statistic-naming"></a></h2>
+    <p>This function uses the <strong>file names written to disk by the CDS</strong> to locate
+AgERA5 files (e.g. <code>"Temperature-Air-2m"</code>, <code>"Max-24h"</code>, <code>"06h"</code>).
+These differ from the CDS API names used in <code><a href="ag5_download.html">ag5_download</a></code>
+(e.g. <code>"2m_temperature"</code>, <code>"24_hour_maximum"</code>, <code>"06_00"</code>).
+The two systems reflect the upstream API and file formats respectively.</p><div class="section">
+<h3 id="variable-name-mapping-file-extract-cds-api-download-">Variable name mapping (file / extract → CDS API / download)<a class="anchor" aria-label="anchor" href="#variable-name-mapping-file-extract-cds-api-download-"></a></h3>
+
+
+<table class="table table"><tr><td><strong>ag5_extract</strong></td><td><strong>ag5_download</strong></td></tr><tr><td>Temperature-Air-2m</td><td>2m_temperature</td></tr><tr><td>Precipitation-Flux</td><td>precipitation_flux</td></tr><tr><td>Solar-Radiation-Flux</td><td>solar_radiation_flux</td></tr><tr><td>Wind-Speed-10m</td><td>10m_wind_speed</td></tr><tr><td>Vapour-Pressure</td><td>vapour_pressure</td></tr><tr><td>Relative-Humidity-2m</td><td>2m_relative_humidity</td></tr><tr><td>Dew-Point_Temperature-2m</td><td>2m_dewpoint_temperature</td></tr><tr><td>Cloud-Cover</td><td>cloud_cover</td></tr><tr><td>Snow-Thickness</td><td>snow_thickness</td></tr><tr><td>Snow-Thickness-LWE</td><td>snow_thickness_lwe</td></tr><tr><td>Precipitation-Rain-Duration-Fraction</td><td>liquid_precipitation_duration_fraction</td></tr><tr><td>Precipitation-Solid-Duration-Fraction</td><td>solid_precipitation_duration_fraction</td></tr></table></div>
+
     </div>
     <div class="section level2">
     <h2 id="valid-variable-values">Valid variable values<a class="anchor" aria-label="anchor" href="#valid-variable-values"></a></h2>
@@ -211,15 +227,28 @@ but should be explicitly indicated as "Mean".</p><ul><li><p>"Cloud-Cover"</p></l
 Preston-Thomas, H. (1990). The International Temperature Scale of 1990 (ITS-90).
 Metrologia, 27(1), 3-10. doi:10.1088/0026-1394/27/1/002</p>
     </div>
+    <div class="section level2">
+    <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
+    <div class="dont-index"><p><code><a href="ag5_download.html">ag5_download</a></code> to download AgERA5 files from the CDS,
+<code><a href="ag5_apsim.html">ag5_apsim</a></code> to prepare APSIM-formatted meteorological files.</p></div>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="co"># Extract maximum day-time temperature for a single date</span></span></span>
 <span class="r-in"><span><span class="va">temp</span> <span class="op">&lt;-</span> <span class="fu">ag5_extract</span><span class="op">(</span>coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>lon <span class="op">=</span> <span class="fl">35.72636</span>, lat <span class="op">=</span> <span class="op">-</span><span class="fl">2.197162</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                      dates <span class="op">=</span> <span class="st">"1991-04-22"</span>,</span></span>
-<span class="r-in"><span>                      variable <span class="op">=</span> <span class="st">"Temperature-Air-2m"</span>,</span></span>
-<span class="r-in"><span>                      statistic <span class="op">=</span> <span class="st">"Max-Day-Time"</span>,</span></span>
-<span class="r-in"><span>                      path <span class="op">=</span> <span class="st">"C:/temperature_data/"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                   dates <span class="op">=</span> <span class="st">"1991-04-22"</span>,</span></span>
+<span class="r-in"><span>                   variable <span class="op">=</span> <span class="st">"Temperature-Air-2m"</span>,</span></span>
+<span class="r-in"><span>                   statistic <span class="op">=</span> <span class="st">"Max-Day-Time"</span>,</span></span>
+<span class="r-in"><span>                   path <span class="op">=</span> <span class="st">"C:/agera5_data/"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Extract relative humidity time series (time parameter required)</span></span></span>
+<span class="r-in"><span><span class="va">rh</span> <span class="op">&lt;-</span> <span class="fu">ag5_extract</span><span class="op">(</span>coords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>lon <span class="op">=</span> <span class="fl">35.72636</span>, lat <span class="op">=</span> <span class="op">-</span><span class="fl">2.197162</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                 dates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"2015-01-01"</span>, <span class="st">"2015-12-31"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                 variable <span class="op">=</span> <span class="st">"Relative-Humidity-2m"</span>,</span></span>
+<span class="r-in"><span>                 time <span class="op">=</span> <span class="st">"09h"</span>,</span></span>
+<span class="r-in"><span>                 path <span class="op">=</span> <span class="st">"C:/agera5_data/"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
@@ -233,7 +262,7 @@ Metrologia, 27(1), 3-10. doi:10.1088/0026-1394/27/1/002</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

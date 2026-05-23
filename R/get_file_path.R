@@ -33,7 +33,8 @@ get_file_path <- function(date_to_search, variable, statistic, time, path){
                                  recurse = TRUE)
 
   if(length(target_file_path) == 0)
-    stop("File not found")
+    stop(sprintf("AgERA5 file not found in '%s' for variable '%s', date: %s",
+                 path, variable, format(date_to_search)))
 
 
   return(target_file_path)

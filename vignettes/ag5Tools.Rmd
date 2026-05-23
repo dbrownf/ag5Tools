@@ -1,9 +1,9 @@
 ---
-title: "ag5Tools"  
-description: ag5Tools is an R package to download and extract data from the Copernicus \\'Agrometeorological indicators from 1979 to present derived from reanalysis\\' dataset (AgERA5)."
+title: "Downloading AgERA5 data with ag5Tools"
+description: "How to set up the CDS API and download AgERA5 agrometeorological data using ag5_download()."
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{ag5Tools}
+  %\VignetteIndexEntry{Downloading AgERA5 data with ag5Tools}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -14,43 +14,195 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
-## Get the CDS API-Key
-To download AgERA5 data from the Copernicus Climate Data Store (CDS) you should first register and get your
-API Key from the [CDS API Guide](https://cds.climate.copernicus.eu/how-to-api).
 
-Once you have your API Key, you should create a file named ".cdsapirc". See more details at the
-[CDS API Guide](https://cds.climate.copernicus.eu/how-to-api)
+## Overview
 
-You do not need to install Python or the 'CDASPI' client, ag5Tools will do it if required.
+The Copernicus "Agrometeorological indicators from 1979 to present derived from reanalysis"
+dataset (AgERA5) provides daily surface meteorological data at 0.1° (~11 km) resolution
+from 1979 to present. The `ag5_download()` function gives programmatic access to this
+dataset from R via the [Copernicus Climate Data Store (CDS) API](https://cds.climate.copernicus.eu/datasets/sis-agrometeorological-indicators?tab=overview).
 
-## Downloading AgERA5 data
-The following example downloads variable "2m_temperature". For this variable there are seven statistics available:  
+Each downloaded file covers one day and one variable, stored as a NetCDF (`.nc`) file.
+Across a full year that means 365 (or 366) files per variable, one per day.
 
-* 24_hour_maximum
+## Setup
 
-* 24_hour_mean
+### 1. Register with the CDS
 
-* 24_hour_minimum
+Create a free account at <https://cds.climate.copernicus.eu>.
 
-* day_time_maximum
+### 2. Get your API key
 
-* day_time_mean
+After logging in, your API key is shown on your profile page. Follow the instructions
+at the [CDS API Guide](https://cds.climate.copernicus.eu/how-to-api) to create a
+`.cdsapirc` configuration file in your home directory containing your key.
 
-* night_time_mean
+### 3. Python and cdsapi
 
-* night_time_minimum  
+`ag5Tools` calls the CDS via the Python `cdsapi` library using the `reticulate` package.
+If Python or `cdsapi` are not installed, `ag5_download()` will install them automatically
+on first use.
 
-In this case, we will download "night_time_minimum". You should replace the target path to 
-a location in your own computer where you want to store the downloaded data.
+## Available variables
+
+`ag5_download()` uses the **CDS API variable names** (snake_case). These differ from
+the file names written to disk, which are used by `ag5_extract()`. See
+`vignette("extracing_data")` for the mapping between the two naming systems.
+
+| Variable (CDS API name) | Description |
+|---|---|
+| `2m_temperature` | 2 m air temperature (multiple statistics) |
+| `2m_dewpoint_temperature` | 2 m dew point temperature |
+| `2m_relative_humidity` | 2 m relative humidity (specific times of day) |
+| `precipitation_flux` | Daily precipitation (mm/day) |
+| `liquid_precipitation_duration_fraction` | Fraction of day with liquid precipitation |
+| `solid_precipitation_duration_fraction` | Fraction of day with solid precipitation |
+| `solar_radiation_flux` | Daily solar radiation (J/m²/day) |
+| `vapour_pressure` | Daily mean vapour pressure |
+| `10m_wind_speed` | 10 m wind speed |
+| `cloud_cover` | Daily mean cloud cover |
+| `snow_thickness` | Snow depth |
+| `snow_thickness_lwe` | Snow liquid water equivalent |
+
+## Statistics
+
+Some variables are available with multiple daily statistics. Provide the statistic
+name in the `statistic` argument.
+
+**`2m_temperature`** — must specify one of:
+
+| Statistic | Description |
+|---|---|
+| `24_hour_maximum` | Maximum over 24 hours |
+| `24_hour_mean` | Mean over 24 hours |
+| `24_hour_minimum` | Minimum over 24 hours |
+| `day_time_maximum` | Maximum during daytime |
+| `day_time_mean` | Mean during daytime |
+| `night_time_mean` | Mean during night-time |
+| `night_time_minimum` | Minimum during night-time |
+
+**`10m_wind_speed`**, **`vapour_pressure`**, **`cloud_cover`**, **`2m_dewpoint_temperature`** —
+only `24_hour_mean` is available. The `statistic` argument must be provided.
+
+**`precipitation_flux`**, **`solar_radiation_flux`**, **`snow_thickness`**,
+**`snow_thickness_lwe`**, **`liquid_precipitation_duration_fraction`**,
+**`solid_precipitation_duration_fraction`** — no `statistic` argument needed.
+
+**`2m_relative_humidity`** — no `statistic`, but requires a `time` argument:
+`"06_00"`, `"09_00"`, `"12_00"`, `"15_00"`, or `"18_00"`.
+
+## Downloading data
+
+### A single day
 
 ```{r eval = FALSE}
 library(ag5Tools)
 
-ag5_download(variable = "2m_temperature",
-            statistic = "night_time_minimum",
-            day = "all",
-            month = "all",
-            year = 2015,
-            path = "C:/custom_target_folder")
+ag5_download(
+  variable  = "2m_temperature",
+  statistic = "24_hour_maximum",
+  year      = 2015,
+  month     = 6,
+  day       = 15,
+  path      = "C:/agera5_data"
+)
+```
+
+### All days in a month
+
+Set `day = "all"` to download every day of the specified month.
+
+```{r eval = FALSE}
+ag5_download(
+  variable  = "precipitation_flux",
+  year      = 2015,
+  month     = 6,
+  day       = "all",
+  path      = "C:/agera5_data"
+)
+```
+
+### An entire year
+
+Set both `month = "all"` and `day = "all"` to download a full year.
+
+```{r eval = FALSE}
+ag5_download(
+  variable  = "solar_radiation_flux",
+  year      = 2020,
+  month     = "all",
+  day       = "all",
+  path      = "C:/agera5_data"
+)
+```
+
+### Relative humidity (requires `time`)
+
+```{r eval = FALSE}
+ag5_download(
+  variable = "2m_relative_humidity",
+  time     = "09_00",
+  year     = 2015,
+  month    = "all",
+  day      = "all",
+  path     = "C:/agera5_data"
+)
+```
+
+## Spatial subsetting with `area`
+
+By default `ag5_download()` downloads the full global extent. Use the `area` argument
+to restrict the download to a region of interest — this substantially reduces file size
+and download time.
+
+### Bounding box
+
+Provide a numeric vector `c(north, west, south, east)` in decimal degrees.
+
+```{r eval = FALSE}
+# East Africa bounding box
+ag5_download(
+  variable  = "2m_temperature",
+  statistic = "24_hour_maximum",
+  year      = 2015,
+  month     = "all",
+  day       = "all",
+  area      = c(5, 28, -12, 42),
+  path      = "C:/agera5_data"
+)
+```
+
+### Single point
+
+Provide `c(lon, lat)`. A minimum 0.1° bounding box (one AgERA5 grid cell) is
+derived automatically.
+
+```{r eval = FALSE}
+ag5_download(
+  variable  = "2m_temperature",
+  statistic = "24_hour_maximum",
+  year      = 2015,
+  month     = "all",
+  day       = "all",
+  area      = c(36.68, -3.37),   # lon, lat — Arusha, Tanzania
+  path      = "C:/agera5_data"
+)
+```
+
+## File organisation on disk
+
+Downloaded files follow the naming convention used by the CDS and are organised
+into sub-folders by variable and statistic automatically. For example, daily maximum
+temperature files for 2015 will appear under a path such as:
 
 ```
+C:/agera5_data/
+  Temperature-Air-2m/
+    Max-24h/
+      AgERA5_Temperature-Air-2m_Max-24h_20150101.nc
+      AgERA5_Temperature-Air-2m_Max-24h_20150102.nc
+      ...
+```
+
+`ag5_extract()` searches the folder tree recursively, so you only need to provide the
+root `path` when extracting.
